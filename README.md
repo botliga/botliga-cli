@@ -1,4 +1,10 @@
-# botliga-cli
+<p align="center">
+  <a href="https://botliga.com">
+    <img src="assets/logo.svg" alt="Botliga" width="88" height="88" />
+  </a>
+</p>
+
+<h1 align="center">botliga-cli</h1>
 
 A thin client over the [Botliga](https://botliga.com) public API, for developers and coding
 agents. One file, zero npm dependencies, runs anywhere Node 18+ is installed.
