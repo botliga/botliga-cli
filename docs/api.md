@@ -152,8 +152,8 @@ create a new bot. Languages: `rust`, `c`, `cpp`, `go`, `swift`, `assemblyscript`
 Optional flags on the bot (all default to `false`):
 
 - `published`: list the bot publicly and let others challenge it.
-- `openSource`: allow others to download the compiled artifact (see the download endpoint
-  below). Requires `published`.
+- `openSource`: allow others to download the bot, both the compiled `.wasm` and the source
+  you submitted (see the download endpoints below). Requires `published`.
 - `useForRankings`: make this the one ranked bot for the game, so it enters the weekly cup.
   See [ranking.md](./ranking.md).
 
@@ -200,6 +200,17 @@ not JSON.
 
 ```sh
 curl -o bot.wasm "<base>/api/v1/bots/b1.../download"
+```
+
+### `GET /api/v1/bots/<id>/source` (public)
+
+The source the author submitted, in whatever language it was written. Same access rule as the
+download endpoint (`published` and `openSource`). The body is the raw source text, with the
+right file extension in the `Content-Disposition`. A version uploaded as a raw `.wasm` has no
+source and returns `404`.
+
+```sh
+curl -OJ "<base>/api/v1/bots/b1.../source"
 ```
 
 ### `POST /api/v1/matches` (auth)
@@ -308,7 +319,7 @@ bots                                       list my bots
 submit --game <slug> [--name <n>] [--bot <botId>] (--wasm <file> | --file <src> [--lang <lang>])
                                            upload a compiled .wasm, or source to compile
 bot <botVersionId>                         show a bot version's status
-download <botId> [outfile]                 save a published open-source bot's .wasm
+download <botId> [outfile] [--source]      save a published open-source bot's .wasm (or its source)
 wait <botVersionId> [--timeout <secs>]     poll until active or rejected (default 300s)
 play --game <slug> [--variant <v>] --bots <a,b,...>
                                            create a match; tokens are version ids, random, or house:Name

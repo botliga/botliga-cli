@@ -331,13 +331,24 @@ async function cmdBot(positionals) {
   if (b.reject_reason) process.stdout.write(`reject_reason: ${b.reject_reason}\n`);
 }
 
-async function cmdDownload(positionals) {
+async function cmdDownload(positionals, flags) {
   const id = positionals[0];
   if (!id) fail("download requires <botId> [outfile]");
-  const out = positionals[1] || `${id}.wasm`;
-  // The artifact is raw bytes, available only for published open-source bots.
-  const res = await api("GET", `/api/v1/bots/${encodeURIComponent(id)}/download`, { raw: true });
+  // Both endpoints serve raw bytes, available only for published open-source bots.
+  const endpoint = flags.source ? "source" : "download";
+  const res = await api("GET", `/api/v1/bots/${encodeURIComponent(id)}/${endpoint}`, { raw: true });
   const buf = Buffer.from(await res.arrayBuffer());
+  let out = positionals[1];
+  if (!out) {
+    if (flags.source) {
+      // The server names the source file with the right extension; honor it.
+      const cd = res.headers.get("content-disposition") || "";
+      const m = cd.match(/filename="?([^"]+)"?/);
+      out = m ? m[1] : `${id}.txt`;
+    } else {
+      out = `${id}.wasm`;
+    }
+  }
   writeFileSync(out, buf);
   process.stdout.write(`saved ${out} (${buf.length} bytes)\n`);
 }
@@ -435,7 +446,7 @@ Commands:
   submit --game <slug> [--name <n>] [--bot <botId>] (--wasm <file> | --file <src> [--lang <lang>])
                                              upload a compiled .wasm, or source to compile
   bot <botVersionId>                         show a bot version's status
-  download <botId> [outfile]                 save a published open-source bot's .wasm
+  download <botId> [outfile] [--source]      save a published open-source bot's .wasm (or its source with --source)
   wait <botVersionId> [--timeout <secs>]     poll until active or rejected (default 300s)
   play --game <slug> [--variant <v>] --bots <a,b,...>
                                              create a match; tokens are version ids, random, or house:Name
@@ -487,7 +498,7 @@ async function main() {
     case "bot":
       return cmdBot(positionals);
     case "download":
-      return cmdDownload(positionals);
+      return cmdDownload(positionals, flags);
     case "wait":
       return cmdWait(positionals, flags);
     case "play":
